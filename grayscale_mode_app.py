@@ -89,7 +89,7 @@ class RestModeApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Windows Auto Grayscale Mode")
-        self.root.geometry("300x350")
+        self.root.geometry("300x340")
         self.root.resizable(False, False) 
 
         try:
@@ -110,9 +110,6 @@ class RestModeApp:
 
         manual_frame = ttk.LabelFrame(root, text="Manual Control")
         manual_frame.pack(pady=10, padx=10, fill="x")
-
-        self.status_label = ttk.Label(manual_frame, text="Status: Unknown")
-        self.status_label.pack(pady=5)
 
         button_frame = ttk.Frame(manual_frame)
         button_frame.pack(pady=5)
@@ -149,8 +146,6 @@ class RestModeApp:
 
         about_button = ttk.Button(info_about_frame, text="About", command=self.show_about)
         about_button.pack(side="left", padx=5)
-
-        self.update_status()
 
         self.root.protocol("WM_DELETE_WINDOW", self.hide_window)
 
@@ -189,12 +184,6 @@ class RestModeApp:
         if self.icon:
             self.icon.stop()
         self.root.quit() 
-
-    def update_status(self):
-        status = "Active" if get_grayscale_status() else "Inactive"
-        self.status_label.config(text=f"Status: {status}")
-        print(f"Status: {status}")
-        self.root.after(5000, self.update_status)
 
     def activate_manual(self):
         set_grayscale(True)
