@@ -89,7 +89,7 @@ class RestModeApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Windows Auto Grayscale Mode")
-        self.root.geometry("300x340")
+        self.root.geometry("300x310")
         self.root.resizable(False, False) 
 
         try:
