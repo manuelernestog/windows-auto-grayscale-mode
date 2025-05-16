@@ -19,14 +19,12 @@ APP_CONFIG_DIR_NAME = "Windows Auto Grayscale Mode"
 CONFIG_FILE_NAME = "schedule_config.json"
 
 def get_config_path():
-    """Gets the full path to the schedule configuration file in AppData."""
     appdata_path = pathlib.Path(os.environ['APPDATA'])
     config_dir = appdata_path / APP_CONFIG_DIR_NAME
     config_file_path = config_dir / CONFIG_FILE_NAME
     return config_file_path
 
 def set_grayscale(active):
-    """Toggles the grayscale filter by simulating the hotkey."""
     try:
         time.sleep(0.1)
 
@@ -37,7 +35,6 @@ def set_grayscale(active):
         print(f"Error simulating hotkey: {e}")
 
 def get_grayscale_status():
-    """Gets the current status of the grayscale filter from the registry."""
     try:
         key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, REG_PATH, 0, winreg.KEY_READ)
         value, reg_type = winreg.QueryValueEx(key, REG_VALUE_NAME)
@@ -50,7 +47,6 @@ def get_grayscale_status():
         return False 
 
 def load_schedule_config():
-    """Loads schedule configuration from the JSON file in AppData."""
     config_path = get_config_path()
     config = {"start_time": "22:00", "end_time": "06:00", "enabled": False}
 
@@ -78,7 +74,6 @@ def load_schedule_config():
     return config
 
 def save_schedule_config(config):
-    """Saves schedule configuration to the JSON file in AppData."""
     config_path = get_config_path()
     config_dir = config_path.parent
 
@@ -181,35 +176,30 @@ class RestModeApp:
         threading.Thread(target=self.icon.run, daemon=True).start()
 
     def show_window(self):
-        """Shows the main application window."""
         self.root.deiconify()
         self.root.lift()
         self.root.attributes('-topmost', True)
         self.root.after_idle(self.root.attributes, '-topmost', False)
 
     def hide_window(self):
-        """Hides the main application window to the tray."""
         self.root.withdraw()
 
     def quit_app(self):
-        """Quits the application."""
         self.stop_scheduling_thread() 
         if self.icon:
             self.icon.stop()
         self.root.quit() 
 
     def update_status(self):
-        """Updates the status label based on the current grayscale state."""
         status = "Active" if get_grayscale_status() else "Inactive"
         self.status_label.config(text=f"Status: {status}")
+        print(f"Status: {status}")
         self.root.after(5000, self.update_status)
 
     def activate_manual(self):
-        """Triggers the grayscale filter toggle via hotkey simulation."""
         set_grayscale(True)
 
     def toggle_schedule_enabled(self):
-        """Handles the checkbox state change for scheduling."""
         self.is_scheduled = self.schedule_enabled_var.get()
         self.schedule_config["enabled"] = self.is_scheduled
         save_schedule_config(self.schedule_config)
@@ -220,7 +210,6 @@ class RestModeApp:
             self.stop_scheduling_thread()
 
     def start_scheduling_thread(self):
-        """Starts the background thread for scheduling."""
         if self.schedule_thread is not None and self.schedule_thread.is_alive():
             print("Scheduling thread is already running.")
             return
@@ -250,7 +239,6 @@ class RestModeApp:
         print("Scheduling thread started.")
 
     def stop_scheduling_thread(self):
-        """Stops the background thread for scheduling."""
         if self.schedule_thread is not None and self.schedule_thread.is_alive():
             self.stop_schedule_event.set()
             print("Scheduling thread stop requested.")
@@ -258,7 +246,6 @@ class RestModeApp:
         print("Scheduling thread stopped.")
 
     def save_schedule_config_callback(self, event=None):
-        """Reads time entries and saves the schedule configuration."""
         self.schedule_config["start_time"] = self.start_time_entry.get()
         self.schedule_config["end_time"] = self.end_time_entry.get()
         save_schedule_config(self.schedule_config)
@@ -266,7 +253,6 @@ class RestModeApp:
 
 
     def run_schedule(self, start_time_str, end_time_str):
-        """Background thread function to check and apply schedule."""
         try:
             start_hour, start_minute = map(int, start_time_str.split(':'))
             end_hour, end_minute = map(int, end_time_str.split(':'))
@@ -296,16 +282,14 @@ class RestModeApp:
                 print("Scheduled deactivation triggered.")
                 set_grayscale(False) 
 
-
             # Sleep until the next minute starts or for a shorter interval
             # Check more frequently than once a minute to react faster to schedule changes
-            time.sleep(30) # Check every 30 seconds
+            time.sleep(60) # Check every 1 minute
 
         print("Schedule thread finished.")
 
 
     def show_info(self):
-        """Shows the Info dialog with instructions for enabling the hotkey."""
         info_message = (
             "Windows Auto Grayscale Mode requires the Windows Color Filters keyboard shortcut to be enabled.\n\n"
             "If the app is not working, please go to:\n"
@@ -315,17 +299,14 @@ class RestModeApp:
         messagebox.showinfo("Windows Auto Grayscale Mode Info", info_message)
 
     def show_about(self):
-        """Shows the About dialog."""
         messagebox.showinfo("About Windows Auto Grayscale Mode", "Windows Auto Grayscale Mode\nVersion: 1.0\nDeveloper: Manuel Ernesto Garcia")
 
     def on_closing(self):
-        """Handles the window closing event."""
         if messagebox.askokcancel("Exit", "Do you want to close the application?"):
             self.stop_scheduling_thread() 
             self.root.destroy()
 
     def add_to_startup(self):
-        """Adds the application to Windows startup."""
         try:
             key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Run", 0, winreg.KEY_WRITE)
             app_path = os.path.abspath(sys.argv[0])
@@ -341,7 +322,6 @@ class RestModeApp:
             messagebox.showerror("Error", f"Could not add Windows Auto Grayscale Mode to Windows startup:\n{e}")
 
     def remove_from_startup(self):
-        """Removes the application from Windows startup."""
         try:
             key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Run", 0, winreg.KEY_WRITE)
             winreg.DeleteValue(key, "Windows Auto Grayscale Mode")
@@ -357,7 +337,6 @@ class RestModeApp:
             messagebox.showerror("Error", f"Could not remove Windows Auto Grayscale Mode from Windows startup:\n{e}")
 
     def is_running_on_startup(self):
-        """Checks if the application is configured to run on startup."""
         try:
             key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Run", 0, winreg.KEY_READ)
             winreg.QueryValueEx(key, "Windows Auto Grayscale Mode")
@@ -370,7 +349,6 @@ class RestModeApp:
             return False
 
     def update_tray_menu(self):
-        """Updates the tray icon menu based on current status."""
         if self.icon:
             menu = (pystray.MenuItem('Show', self.show_window),
                     pystray.MenuItem('Toggle Grayscale', self.activate_manual),
